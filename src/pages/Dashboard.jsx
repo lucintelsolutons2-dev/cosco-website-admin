@@ -22,24 +22,33 @@ export default function Dashboard() {
   const [recentEnq, setRecentEnq] = useState([]);
   const [recentLucky, setRecentLucky] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     (async () => {
-      const [enqCount, newCount, luckyCount, winnersCount, enq, lucky] = await Promise.all([
-        supabase.from("enquiries").select("id", { count: "exact", head: true }),
-        supabase.from("enquiries").select("id", { count: "exact", head: true }).eq("status", "new"),
-        supabase.from("lucky_draw_entries").select("id", { count: "exact", head: true }),
-        supabase.from("lucky_draw_entries").select("id", { count: "exact", head: true }).eq("is_winner", true),
-        supabase.from("enquiries").select("*").order("created_at", { ascending: false }).limit(5),
-        supabase.from("lucky_draw_entries").select("*").order("created_at", { ascending: false }).limit(5),
-      ]);
-      setStats({
-        enq: enqCount.count ?? 0, newEnq: newCount.count ?? 0,
-        lucky: luckyCount.count ?? 0, winners: winnersCount.count ?? 0,
-      });
-      setRecentEnq(enq.data ?? []);
-      setRecentLucky(lucky.data ?? []);
-      setLoading(false);
+      try {
+        const results = await Promise.all([
+          supabase.from("enquiries").select("id", { count: "exact", head: true }),
+          supabase.from("enquiries").select("id", { count: "exact", head: true }).eq("status", "new"),
+          supabase.from("lucky_draw_entries").select("id", { count: "exact", head: true }),
+          supabase.from("lucky_draw_entries").select("id", { count: "exact", head: true }).eq("is_winner", true),
+          supabase.from("enquiries").select("*").order("created_at", { ascending: false }).limit(5),
+          supabase.from("lucky_draw_entries").select("*").order("created_at", { ascending: false }).limit(5),
+        ]);
+        const failed = results.find((r) => r.error);
+        if (failed) throw failed.error;
+        const [enqCount, newCount, luckyCount, winnersCount, enq, lucky] = results;
+        setStats({
+          enq: enqCount.count ?? 0, newEnq: newCount.count ?? 0,
+          lucky: luckyCount.count ?? 0, winners: winnersCount.count ?? 0,
+        });
+        setRecentEnq(enq.data ?? []);
+        setRecentLucky(lucky.data ?? []);
+      } catch (e) {
+        setError(e?.message || "Failed to load dashboard.");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -47,6 +56,8 @@ export default function Dashboard() {
     <div>
       <h1 className="mb-1 text-2xl font-bold text-ink-900">Dashboard</h1>
       <p className="mb-6 text-sm text-ink-400">Overview of website submissions</p>
+
+      {error && <div className="mb-4 rounded-lg bg-brand-50 px-4 py-3 text-sm text-brand-700">{error}</div>}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat icon={FiInbox} label="Total enquiries" value={loading ? "…" : stats.enq} tint="bg-brand-50 text-brand-600" />
@@ -56,7 +67,7 @@ export default function Dashboard() {
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <RecentCard title="Recent enquiries" to="/enquiries" empty="No enquiries yet.">
+        <RecentCard title="Recent enquiries" to="/enquiries" empty="No enquiries yet." loading={loading}>
           {recentEnq.map((r) => (
             <li key={r.id} className="flex items-center justify-between gap-3 py-2.5">
               <div className="min-w-0">
@@ -68,7 +79,7 @@ export default function Dashboard() {
           ))}
         </RecentCard>
 
-        <RecentCard title="Recent lucky draw" to="/lucky-draw" empty="No entries yet.">
+        <RecentCard title="Recent lucky draw" to="/lucky-draw" empty="No entries yet." loading={loading}>
           {recentLucky.map((r) => (
             <li key={r.id} className="flex items-center justify-between gap-3 py-2.5">
               <div className="min-w-0">
@@ -86,7 +97,7 @@ export default function Dashboard() {
   );
 }
 
-function RecentCard({ title, to, empty, children }) {
+function RecentCard({ title, to, empty, loading, children }) {
   const hasItems = Array.isArray(children) && children.length > 0;
   return (
     <div className="card p-5">
@@ -94,7 +105,8 @@ function RecentCard({ title, to, empty, children }) {
         <h2 className="font-bold text-ink-900">{title}</h2>
         <Link to={to} className="text-sm font-semibold text-brand-700 hover:underline">View all →</Link>
       </div>
-      {hasItems ? <ul className="divide-y divide-ink-100">{children}</ul>
+      {loading ? <p className="py-6 text-center text-sm text-ink-400">Loading…</p>
+        : hasItems ? <ul className="divide-y divide-ink-100">{children}</ul>
         : <p className="py-6 text-center text-sm text-ink-400">{empty}</p>}
     </div>
   );

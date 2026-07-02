@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { FiGrid, FiInbox, FiGift, FiLogOut } from "react-icons/fi";
+import { FiGrid, FiInbox, FiGift, FiLogOut, FiKey } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+import ChangePassword from "./ChangePassword";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: FiGrid, end: true },
@@ -10,6 +12,7 @@ const nav = [
 
 export default function Layout({ children }) {
   const { session, signOut } = useAuth();
+  const [showPw, setShowPw] = useState(false);
 
   return (
     <div className="flex min-h-screen">
@@ -32,6 +35,9 @@ export default function Layout({ children }) {
         </nav>
         <div className="border-t border-ink-100 pt-3">
           <p className="truncate px-3 pb-2 text-xs text-ink-400">{session?.user?.email}</p>
+          <button onClick={() => setShowPw(true)} className="btn-ghost mb-2 w-full justify-start">
+            <FiKey size={16} /> Change password
+          </button>
           <button onClick={signOut} className="btn-ghost w-full justify-start">
             <FiLogOut size={16} /> Sign out
           </button>
@@ -43,7 +49,10 @@ export default function Layout({ children }) {
         {/* Mobile top bar */}
         <header className="flex items-center justify-between border-b border-ink-100 bg-white px-4 py-3 md:hidden">
           <div className="text-base font-extrabold text-ink-900">COSCO<span className="text-brand-600">.</span> Admin</div>
-          <button onClick={signOut} className="btn-ghost px-3 py-1.5 text-xs"><FiLogOut size={14} /> Sign out</button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowPw(true)} className="btn-ghost px-3 py-1.5 text-xs"><FiKey size={14} /> Password</button>
+            <button onClick={signOut} className="btn-ghost px-3 py-1.5 text-xs"><FiLogOut size={14} /> Sign out</button>
+          </div>
         </header>
         <div className="flex gap-1 border-b border-ink-100 bg-white px-2 md:hidden">
           {nav.map((n) => (
@@ -59,6 +68,8 @@ export default function Layout({ children }) {
 
         <main className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
+
+      {showPw && <ChangePassword onClose={() => setShowPw(false)} />}
     </div>
   );
 }

@@ -16,9 +16,14 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setBusy(true);
-    const { error } = await signIn(email.trim(), password);
-    setBusy(false);
-    if (error) setError(error.message || "Sign in failed.");
+    try {
+      const { error } = await signIn(email.trim(), password);
+      if (error) setError(error.message || "Sign in failed.");
+    } catch (err) {
+      setError(err?.message || "Sign in failed.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
