@@ -1,0 +1,19 @@
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies / build
+node_modules
+dist
+dist-ssr
+
+# Env / secrets — never commit real values
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
