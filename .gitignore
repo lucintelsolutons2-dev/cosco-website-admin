@@ -12,8 +12,17 @@ dist-ssr
 .env.*
 !.env.example
 
+# Vercel CLI link folder
+.vercel
+
 # Editor / OS
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+.vercel
+.env*
+
+# Apps Script source contains the mailer secret token — do not commit
+supabase/apps-script-email.gs

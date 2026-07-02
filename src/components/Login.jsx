@@ -4,8 +4,11 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // Optional convenience prefill for the single-admin tool (values come from
+  // env, not committed source). NOTE: on a public deployment this exposes the
+  // password in the client bundle — keep it low-value / rotatable.
+  const [email, setEmail] = useState(import.meta.env.VITE_ADMIN_EMAIL || "");
+  const [password, setPassword] = useState(import.meta.env.VITE_ADMIN_PW || "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
